@@ -23,6 +23,7 @@ jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
+    environment: gamania-sre-task
     steps:
       # 拉取最新的程式碼到 Runner 上
       # 這是所有後續步驟的基礎，沒有程式碼就無法建置
