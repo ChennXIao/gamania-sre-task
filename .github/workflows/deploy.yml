@@ -43,54 +43,54 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./app
+          context: .
           push: true
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
             ${{ env.DOCKER_IMAGE }}:latest
 
-  # ============================================================
-  # 步驟二：使用 Terraform 確保 GCP 上的 K8s 集群是最新狀態
-  # 此 Job 負責基礎設施的建立與更新（Infrastructure as Code）
-  # 依賴步驟一完成後才會執行
-  # ============================================================
-  terraform:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      # 拉取程式碼，取得 terraform/ 目錄下的設定檔
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # # ============================================================
+  # # 步驟二：使用 Terraform 確保 GCP 上的 K8s 集群是最新狀態
+  # # 此 Job 負責基礎設施的建立與更新（Infrastructure as Code）
+  # # 依賴步驟一完成後才會執行
+  # # ============================================================
+  # terraform:
+  #   name: Terraform Apply
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push
+  #   steps:
+  #     # 拉取程式碼，取得 terraform/ 目錄下的設定檔
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      # 透過 GCP Service Account 金鑰進行身份驗證
-      # 這是 Terraform 操作 GCP 資源的前提條件
-      # 金鑰內容存放在 GitHub Secrets 中，避免洩漏
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+  #     # 透過 GCP Service Account 金鑰進行身份驗證
+  #     # 這是 Terraform 操作 GCP 資源的前提條件
+  #     # 金鑰內容存放在 GitHub Secrets 中，避免洩漏
+  #     - name: Authenticate to GCP
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # 安裝 Terraform CLI 工具
-      # 指定版本確保團隊成員和 CI/CD 使用一致的 Terraform 版本
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
+  #     # 安裝 Terraform CLI 工具
+  #     # 指定版本確保團隊成員和 CI/CD 使用一致的 Terraform 版本
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: 1.5.0
 
-      # 初始化 Terraform 工作目錄
-      # 下載所需的 Provider 套件（如 google provider）
-      # 初始化 Backend 設定（如遠端狀態儲存）
-      - name: Terraform Init
-        working-directory: ./terraform
-        run: terraform init
+  #     # 初始化 Terraform 工作目錄
+  #     # 下載所需的 Provider 套件（如 google provider）
+  #     # 初始化 Backend 設定（如遠端狀態儲存）
+  #     - name: Terraform Init
+  #       working-directory: ./terraform
+  #       run: terraform init
 
-      # 執行 Terraform Apply，自動建立或更新 GCP 上的資源
-      # -auto-approve 跳過互動式確認，適用於 CI/CD 自動化流程
-      # 透過 -var 傳入 GCP 專案 ID（存放在 GitHub Secrets）
-      - name: Terraform Apply
-        working-directory: ./terraform
-        run: terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+  #     # 執行 Terraform Apply，自動建立或更新 GCP 上的資源
+  #     # -auto-approve 跳過互動式確認，適用於 CI/CD 自動化流程
+  #     # 透過 -var 傳入 GCP 專案 ID（存放在 GitHub Secrets）
+  #     - name: Terraform Apply
+  #       working-directory: ./terraform
+  #       run: terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
 
   # ============================================================
   # 步驟三：使用 Helm 將應用部署到 GKE 集群
@@ -100,7 +100,7 @@ jobs:
   deploy:
     name: Helm Deploy
     runs-on: ubuntu-latest
-    needs: [build-and-push, terraform]
+    needs: build-and-push
     steps:
       # 拉取程式碼，取得 helm/ 目錄下的 Chart 檔案
       - name: Checkout code
