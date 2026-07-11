@@ -1,0 +1,39 @@
+# ============================================================
+# values.yaml - Helm Chart 的關鍵設定變數
+# 部署前請根據實際情況修改以下參數
+# ============================================================
+
+# --- Docker Image 設定 ---
+# repository: 你的 Docker Hub 帳號與映像檔名稱（必須修改）
+# tag: 映像檔版本標籤，建議使用具體版本號而非 latest
+image:
+  repository: cching616/custom-nginx
+  tag: v2
+  pullPolicy: IfNotPresent
+
+# --- 副本數量 ---
+# 控制要部署幾個 Pod，正式環境建議設為 2 以上以確保高可用性
+replicaCount: 2
+
+# --- Service 設定 ---
+# type: LoadBalancer 會自動建立雲端負載均衡器，讓外網可以存取
+# port: 對外暴露的服務埠號
+service:
+  type: LoadBalancer
+  port: 80
+
+# --- 資源限制 ---
+# requests: Pod 啟動時保證獲得的最小資源量
+# limits: Pod 可以使用的最大資源量，超過會被限制或終止
+resources:
+  requests:
+    cpu: "1m"       # 👈 0.001 顆 CPU，比空氣還輕，K8s 絕對放行！
+    memory: "10Mi"  # 👈 只要 10MB 記憶體
+  limits:
+    cpu: "100m"
+    memory: "128Mi"
+
+# --- 健康檢查路徑 ---
+# 用於 readiness/liveness probe，確認應用是否正常運行
+# 預設檢查 /sre.txt 是否可以正常回應
+healthCheckPath: /sre.txt

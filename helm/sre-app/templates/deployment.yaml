@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+          # 就緒探針：確認 Pod 已準備好接收流量
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthCheckPath }}
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          # 存活探針：確認 Pod 仍在正常運行，失敗則重啟
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthCheckPath }}
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          # 資源限制
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
