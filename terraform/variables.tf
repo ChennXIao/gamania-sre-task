@@ -1,44 +1,44 @@
 # ============================================================
-# 變數定義檔：集中管理所有可調整的參數
+# Variable Definitions: Centralized management of configurable parameters
 # ============================================================
 
-# GCP 專案 ID，部署前必須修改為你自己的專案 ID
+# GCP Project ID - must be changed to your own project ID before deployment
 variable "project_id" {
-  description = "GCP 專案 ID"
+  description = "GCP Project ID"
   type        = string
 }
 
-# 部署的 GCP 區域，預設使用台灣區域以降低延遲
+# GCP region for deployment, defaults to Taiwan region for lower latency
 variable "region" {
-  description = "GCP 部署區域"
+  description = "GCP deployment region"
   type        = string
   default     = "asia-east1"
 }
 
-# GKE 節點所在的可用區域
+# GKE node availability zone
 variable "zone" {
-  description = "GCP 可用區域"
+  description = "GCP availability zone"
   type        = string
   default     = "asia-east1-a"
 }
 
-# GKE 集群名稱
+# GKE cluster name
 variable "cluster_name" {
-  description = "GKE 集群名稱"
+  description = "GKE cluster name"
   type        = string
   default     = "sre-gke-cluster"
 }
 
-# GKE 節點數量，最小設定以節省成本
+# GKE node count, set to minimum to save costs
 variable "node_count" {
-  description = "GKE 節點數量"
+  description = "GKE node count"
   type        = number
   default     = 2
 }
 
-# GKE 節點機器型號，使用 e2-medium 以節省測試成本
+# GKE node machine type, using e2-medium to save testing costs
 variable "machine_type" {
-  description = "GKE 節點機器型號"
+  description = "GKE node machine type"
   type        = string
   default     = "e2-medium"
 }

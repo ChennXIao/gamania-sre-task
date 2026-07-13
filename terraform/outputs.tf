@@ -1,29 +1,29 @@
 # ============================================================
-# 輸出變數：Terraform 執行完畢後顯示重要資訊
-# 這些值可以用於後續的 Helm 部署或 CI/CD 流程
+# Output Variables: Display important information after Terraform execution
+# These values can be used for subsequent Helm deployment or CI/CD pipelines
 # ============================================================
 
-# 輸出 GKE 集群名稱，用於 kubectl 連線
+# Output GKE cluster name for kubectl connection
 output "cluster_name" {
-  description = "GKE 集群名稱"
+  description = "GKE cluster name"
   value       = google_container_cluster.primary.name
 }
 
-# 輸出集群所在區域
+# Output the zone where the cluster is located
 output "cluster_zone" {
-  description = "GKE 集群所在區域"
+  description = "GKE cluster zone"
   value       = google_container_cluster.primary.location
 }
 
-# 輸出集群的 API 端點，kubectl 會透過此端點與集群通訊
+# Output the cluster API endpoint, used by kubectl to communicate with the cluster
 output "cluster_endpoint" {
-  description = "GKE 集群 API 端點"
+  description = "GKE cluster API endpoint"
   value       = google_container_cluster.primary.endpoint
   sensitive   = true
 }
 
-# 輸出連線到集群所需的 gcloud 指令
+# Output the gcloud command needed to connect to the cluster
 output "get_credentials_command" {
-  description = "取得 kubeconfig 的指令"
+  description = "Command to obtain kubeconfig"
   value       = "gcloud container clusters get-credentials ${google_container_cluster.primary.name} --zone ${google_container_cluster.primary.location} --project ${var.project_id}"
 }

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: sre-app
-description: SRE 面試作業 - 自訂 Nginx 應用的 Helm Chart
+description: SRE Pretest - Custom Nginx Application Helm Chart
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
