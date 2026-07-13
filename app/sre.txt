@@ -1,1 +1,1 @@
-Hello SRE! This is v3 auto-deployed via GitHub Actions!
+Hello SRE!
