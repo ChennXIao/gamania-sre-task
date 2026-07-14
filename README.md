@@ -435,13 +435,14 @@ helm upgrade --install sre-app ./helm/sre-app --set annotations.cloudArmorPolicy
 
 ### Approach 3: Separation of Pipelines + Naming Agreement 
 
-In a high-velocity engineering ecosystem, code updates happen multiple times a day, whereas underlying cloud networks change maybe once every few months. Running a full Terraform hardware refresh every single time if you just want to update a web page text (sre.txt) is highly inefficient and risks cluster downtime.
-The industry favorite pattern is completely splitting your Infrastructure and Application pipelines into two different Git repositories, using a Naming Agreement Contract to link them.
-In your infrastructure repo, you configure Terraform to explicitly name the Cloud Armor policy using a predictable, static string (e.g., prod-cloud-armor-waf). Once applied, this name stays constant for months or years.
-In your app repo, you completely bypass Terraform commands. Inside your environment config file environments/values-prod.yaml, you simply hardcode that exact agreed-upon name contract:
+In a high-velocity engineering ecosystem, code updates happen multiple times a day, whereas underlying cloud networks change maybe once every few months. In my opinion, running a full Terraform hardware refresh every single time we just want to update a web page text (such as sre.txt) is highly inefficient and introduces unnecessary risks of cluster instability.
+Therefore, my proposed approach is to completely decouple the Infrastructure and Application pipelines into two independent Git repositories, linking them via a "Naming Agreement Contract."
+Here is how I would design and implement this flow:
+On the Infrastructure Side (Establishing the Contract):
+We configure Terraform to explicitly name the Cloud Armor policy using a predictable, static string (e.g., prod-cloud-armor-waf). Once applied, this name remains constant for months or even years, ensuring a stable target.
 
-
-```bash
+```hcl
+# terraform/main.tf(further implementation)
 resource "google_compute_security_policy" "waf" {
   name        = "prod-cloud-armor-waf" # fix name
   description = "Production WAF - Managed by Infra Team"
@@ -453,7 +454,7 @@ resource "google_compute_security_policy" "waf" {
 ```
 
 ```yaml
-# environments/values-prod.yaml
+# environments/values-prod.yaml(further implementation)
 ingress:
   annotations:
     "cloud.google.com/security-policy": "prod-cloud-armor-waf"
