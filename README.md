@@ -1,5 +1,26 @@
 # Gamania SRE Pretest - Cloud-Native Deployment & Automation
 
+## Table of Contents
+
+- [Personal Statement & Reflection](#personal-statement--reflection)
+- [Generative AI Disclosure & Prompt Log](#generative-ai-disclosure--prompt-log)
+- [Project Structure](#project-structure)
+
+- [Solutions](#solutions)
+  - [Q1 - Terraform: Create a Kubernetes Cluster](#q1---terraform-create-a-kubernetes-cluster)
+  - [Q2 - Application Containerization (Dockerfile)](#q2---application-containerization-dockerfile)
+  - [Q3 - Helm Chart Packaging & Deployment](#q3---helm-chart-packaging--deployment)
+  - [Q4 - GitHub Actions CI/CD Pipeline](#q4---github-actions-cicd-pipeline)
+  - [Q5 - GitOps Multi-Environment Deployment](#q5---gitops-multi-environment-deployment)
+  - [Q6 - Linking Terraform Resources with Helm](#q6---linking-terraform-resources-with-helm)
+
+- [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [GCP Setup](#gcp-setup)
+  - [Deployment Walkthrough](#deployment-walkthrough)
+
+---
+
 ## Personal Statement & Reflection
 
 First and foremost, **I would like to extend my sincere gratitude to the team for inviting me to take this pretest.** I truly appreciate this opportunity to challenge myself, step out of my comfort zone, and showcase my potential to the team. 
@@ -18,6 +39,7 @@ Completing this deployment and watching the automated pipeline run successfully 
 ---
 
 ## Generative AI Disclosure & Prompt Log
+Rather than using AI merely as a code generator, it was primarily utilized as an architectural sounding board to deeply grasp the "why" behind system design choices—such as network layers, state management, and the separation of concerns between infrastructure and applications.
 
 In strict accordance with the assignment guidelines, here is the disclosure of how Generative AI assisted me in completing this task:
 
@@ -27,7 +49,8 @@ In strict accordance with the assignment guidelines, here is the disclosure of h
 * **Question 4 & 5 (GitHub Actions & GitOps):** Used AI to optimize multi-stage pipeline sequencing (Build -> Deploy) and conditional branch switching logic.
 
 ### 2. Sample Prompts Used During Development
-To give visibility into my iterative learning process, here are the key prompts utilized:
+
+**Note:** To keep this document concise and highly readable, the extensive, highly detailed back-and-forth debugging sessions and micro-optimization conversations have been omitted. The prompts below represent the pivotal high-level inquiries that guided the system's design.
 
 > **Prompt 1 (Understanding Architecture):**
 > *"I am a backend engineer learning GKE. Explain to me why we should separate the GKE cluster definition from the managed node pool in Terraform. Provide a production-ready example including a custom VPC."*
@@ -61,186 +84,9 @@ To give visibility into my iterative learning process, here are the key prompts 
 └── README.md
 ```
 
-## Prerequisites
 
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| Docker | Build and test container images | [docker.com](https://docs.docker.com/get-docker/) |
-| gcloud CLI | Manage GCP resources and obtain GKE credentials | [cloud.google.com](https://cloud.google.com/sdk/docs/install) |
-| Terraform | Manage GCP infrastructure as code | [terraform.io](https://developer.hashicorp.com/terraform/install) |
-| kubectl | Interact with Kubernetes clusters | `gcloud components install kubectl` |
-| Helm | Package and deploy K8s applications | [helm.sh](https://helm.sh/docs/intro/install/) |
 
----
-
-## GCP Setup
-
-Complete the following setup on GCP before starting:
-
-### Step 1: Create a GCP Project and Enable Required APIs
-
-```bash
-# Log in to GCP
-gcloud auth login
-
-# Create a project
-gcloud projects create GCP_PROJECT_ID --name="SRE Pretest"
-
-# Set the active project
-gcloud config set project GCP_PROJECT_ID
-
-# Enable required GCP APIs (GKE, Compute Engine, Container Registry)
-gcloud services enable container.googleapis.com
-gcloud services enable compute.googleapis.com
-gcloud services enable containerregistry.googleapis.com
-```
-
-### Step 2: Create a Service Account (for Terraform and CI/CD)
-
-```bash
-# Create a Service Account
-gcloud iam service-accounts create sre-deployer \
-  --display-name="SRE Deployer"
-
-# Grant necessary permissions (Kubernetes Admin, Compute Admin, Service Account User)
-gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
-  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/container.admin"
-
-gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
-  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/compute.admin"
-
-gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
-  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
-
-# Download the Service Account JSON key
-gcloud iam service-accounts keys create gcp-sa-key.json \
-  --iam-account=sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com
-```
-
-### Step 3: Set Up Docker Hub
-
-1. Get **username** and **Access Token** from  [Docker Hub](https://hub.docker.com/).
-
-### Step 4: Configure GitHub Secrets
-
-Add the following secrets in GitHub repository:
-
-| Secret Name | Value
-|---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub username
-| `DOCKERHUB_TOKEN` | Docker Hub Access Token 
-| `GCP_SA_KEY` | Full contents of `gcp-sa-key.json`
-| `GCP_PROJECT_ID` | GCP Project ID
-
----
-
-## Deployment Walkthrough
-
-Below are the step-by-step commands to manually deploy the entire service:
-
-### Step 1: Test Docker Image Locally (Q2)
-
-```bash
-# Build the image
-docker build -t custom-nginx:latest ./app/
-
-# Run the container locally
-docker run -d --name sre-test -p 8080:80 custom-nginx:latest
-
-# Verify (should display "Hello SRE!")
-curl http://localhost:8080/sre.txt
-
-# Clean up after testing
-docker stop sre-test && docker rm sre-test
-```
-
-### Step 2: Push Image to Docker Hub (Q2)
-
-```bash
-# Log in to Docker Hub
-docker login -u DOCKERHUB_USERNAME
-
-# Tag and push
-docker tag custom-nginx:latest DOCKERHUB_USERNAME/custom-nginx:latest
-docker push DOCKERHUB_USERNAME/custom-nginx:latest
-```
-
-### Step 3: Create GKE Cluster with Terraform (Q1)
-
-```bash
-# Set up GCP credentials for Terraform
-gcloud auth application-default login
-
-# Initialize Terraform
-cd terraform/
-terraform init
-
-# Preview resources (verify the plan)
-terraform plan -var="project_id=GCP_PROJECT_ID"
-
-# Create the cluster (takes approximately 5-10 minutes)
-terraform apply -var="project_id=GCP_PROJECT_ID"
-
-# Obtain cluster credentials so kubectl can access the cluster
-gcloud container clusters get-credentials sre-gke-cluster \
-  --zone asia-east1-a \
-  --project GCP_PROJECT_ID
-
-# Verify cluster connection
-kubectl cluster-info
-kubectl get nodes
-
-cd ..
-```
-
-### Step 4: Deploy Application to GKE with Helm (Q3)
-
-```bash
-# Deploy the Helm Chart (replace with Docker Hub username)
-helm install sre-app ./helm/sre-app \
-  --set image.repository=DOCKERHUB_USERNAME/custom-nginx \
-  --set image.tag=latest
-
-# Wait for Pods to become ready
-kubectl get pods -w
-
-# Watch the Service until EXTERNAL-IP changes from <pending> to an actual IP
-kubectl get svc sre-app-service -w
-
-# Test external IP with a browser or curl
-curl http://EXTERNAL_IP/sre.txt
-```
-
-### Step 5: Set Up CI/CD Automation (Q4)
-
-```bash
-# Initialize Git repository
-git init
-git add .
-git commit -m "Initial SRE pretest submission"
-
-# Create a GitHub repository and push
-git remote add origin git@github.com:USERNAME/gamania-sre-task.git
-git branch -M main
-git push -u origin main
-
-```
-
-### Resource Cleanup
-
-```bash
-# Delete the Helm Release
-helm uninstall sre-app
-
-# Destroy the GKE cluster and all Terraform-managed resources
-cd terraform/
-terraform destroy -var="project_id=GCP_PROJECT_ID"
-```
-
----
+## Solutions
 
 ## Q1 - Terraform: Create a Kubernetes Cluster
 
@@ -386,23 +232,23 @@ sequenceDiagram
     participant GKE as GKE Cluster
 
     Note over Dev,GKE: === Phase 1: Infrastructure Provisioning ===
-    Dev->>TF: terraform init (Download providers)
-    Dev->>TF: terraform plan (Preview changes)
-    Dev->>TF: terraform apply (Execute creation)
+    Dev->>TF: terraform init
+    Dev->>TF: terraform plan
+    Dev->>TF: terraform apply
     TF->>GCP: Create VPC + Subnet
     TF->>GCP: Create GKE Cluster
-    TF->>GCP: Create Node Pool (2x e2-medium)
+    TF->>GCP: Create Node Pool
     GCP-->>Dev: Output cluster_name, endpoint
 
     Note over Dev,GKE: === Phase 2: Application Packaging ===
-    Dev->>Docker: docker build (Package Nginx + sre.txt)
-    Dev->>Docker: docker push (Upload to Docker Hub)
+    Dev->>Docker: docker build
+    Dev->>Docker: docker push
 
     Note over Dev,GKE: === Phase 3: Application Deployment ===
-    Dev->>GKE: gcloud get-credentials (Fetch kubeconfig)
+    Dev->>GKE: gcloud get-credentials
     Dev->>Helm: helm upgrade --install sre-app
-    Helm->>GKE: Create Deployment (2x Pods)
-    Helm->>GKE: Create Service (LoadBalancer)
+    Helm->>GKE: Create Deployment
+    Helm->>GKE: Create Service
     GKE-->>Dev: Allocate External IP
 ```
 
@@ -436,8 +282,6 @@ git push origin main
 ---
 
 ## Q5 - GitOps Multi-Environment Deployment
-
-**Original:**
 
 > Please describe, with examples if possible, how to use the concept of GitOps, the CI/CD Pipeline you built in question 4 can support multi-environment deployments (such as alpha, beta, staging, production) based on the same codebase or package manager.
 
@@ -473,7 +317,7 @@ env:
   ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'alpha' }}
 ```
 
-### Approach 2: Overlay-Based Strategy (Recommended)
+### Approach 2: Overlay-Based Strategy
 
 Use the same Helm Chart but create separate values files for each environment:
 
@@ -485,12 +329,49 @@ helm/sre-app/
 └── values-production.yaml     # Production environment overrides (replica: 3, larger resources)
 ```
 
-During deployment, specify the environment-specific values file:
 
-```bash
-helm upgrade --install sre-app ./helm/sre-app \
-  -f ./helm/sre-app/values.yaml \
-  -f ./helm/sre-app/values-production.yaml
+In a production-grade enterprise, you don't want engineers manually choosing where code goes. Instead, you treat your deployment as a linear pipeline. Every commit to main starts a chain reaction: it must pass testing in Alpha first before it is allowed to knock on Production's door.
+
+```
+[ Git Push to main ] 
+         │
+         ▼
+  [ Stage 1: Deploy to Alpha ] ──► Reads values-alpha.yaml ──► Tests pass!
+         │
+         ▼ (Pipeline pauses automatically)
+  [ Stage 2: Manual Approval Gate ] ──► Lead SRE clicks "Approve" inside GitHub
+         │
+         ▼
+  [ Stage 3: Deploy to Production ] ──► Reads values-prod.yaml ──► Live update!
+ ```
+
+Defining two sequential jobs in the same pipeline. Job 2 will strictly wait for Job 1 to succeed and require manual sign-off:
+
+```yaml
+jobs:
+  # Job 1: Always deploys to Alpha first for testing
+  deploy-alpha:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Alpha Environment
+        run: |
+          helm upgrade --install sre-app-alpha ./helm/sre-app \
+            -f ./helm/sre-app/values.yaml \
+            -f ./environments/values-alpha.yaml \
+            --set image.tag=${{ github.sha }}
+
+  # Job 2: Deploys to Production ONLY after Alpha succeeds AND human approval is granted
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: deploy-alpha
+    environment: production # Binds to a GitHub environment requiring "Required Reviewers"
+    steps:
+      - name: Deploy to Production Environment
+        run: |
+          helm upgrade --install sre-app-prod ./helm/sre-app \
+            -f ./helm/sre-app/values.yaml \
+            -f ./environments/values-prod.yaml \
+            --set image.tag=${{ github.sha }}
 ```
 
 ### Approach 3: ArgoCD Integration (GitOps Tool)
@@ -515,7 +396,7 @@ Install ArgoCD in the cluster and create an Application CRD for each environment
 
 When Helm Charts need to reference resources created by Terraform (e.g., CloudArmor policy names, static IPs), common linking methods include:
 
-### Approach 1: Terraform Output + CI/CD Variable Passing (Recommended)
+### Approach 1: Terraform Output + CI/CD Variable Passing
 
 Define the resource names that need to be referenced as Terraform outputs:
 
@@ -541,11 +422,9 @@ In the CI/CD pipeline, read the output and pass it to Helm via `--set`:
       --set annotations.cloudArmorPolicy=${{ env.ARMOR_POLICY }}
 ```
 
-### Approach 2: Terraform Remote State Data Source
-
 Use the `terraform_remote_state` data source to read outputs from another Terraform state file. This is suitable for cross-referencing resources between multiple Terraform projects.
 
-### Approach 3: Dynamic GCP API Query
+### Approach 2: Dynamic GCP API Query
 
 Query resource names directly using `gcloud` commands in the CI/CD pipeline, without depending on the Terraform state:
 
@@ -553,3 +432,214 @@ Query resource names directly using `gcloud` commands in the CI/CD pipeline, wit
 POLICY_NAME=$(gcloud compute security-policies list --format="value(name)" --filter="name~sre")
 helm upgrade --install sre-app ./helm/sre-app --set annotations.cloudArmorPolicy=$POLICY_NAME
 ```
+
+### Approach 3: Separation of Pipelines + Naming Agreement 
+
+In a high-velocity engineering ecosystem, code updates happen multiple times a day, whereas underlying cloud networks change maybe once every few months. Running a full Terraform hardware refresh every single time if you just want to update a web page text (sre.txt) is highly inefficient and risks cluster downtime.
+The industry favorite pattern is completely splitting your Infrastructure and Application pipelines into two different Git repositories, using a Naming Agreement Contract to link them.
+In your infrastructure repo, you configure Terraform to explicitly name the Cloud Armor policy using a predictable, static string (e.g., prod-cloud-armor-waf). Once applied, this name stays constant for months or years.
+In your app repo, you completely bypass Terraform commands. Inside your environment config file environments/values-prod.yaml, you simply hardcode that exact agreed-upon name contract:
+
+
+```bash
+resource "google_compute_security_policy" "waf" {
+  name        = "prod-cloud-armor-waf" # fix name
+  description = "Production WAF - Managed by Infra Team"
+
+  lifecycle {
+    prevent_destroy = true 
+  }
+}
+```
+
+```yaml
+# environments/values-prod.yaml
+ingress:
+  annotations:
+    "cloud.google.com/security-policy": "prod-cloud-armor-waf"
+```
+
+# Quick Start
+## Prerequisites
+
+| Tool | Purpose |
+|------|---------|
+| Docker | Build and test container images |
+| gcloud CLI | Manage GCP resources and obtain GKE credentials |
+| Terraform | Manage GCP infrastructure as code |
+| kubectl | Interact with Kubernetes clusters |
+| Helm | Package and deploy K8s applications |
+
+### GCP Setup
+
+Complete the following setup on GCP before starting:
+
+#### Step 1: Create a GCP Project and Enable Required APIs
+
+```bash
+# Log in to GCP
+gcloud auth login
+
+# Create a project
+gcloud projects create GCP_PROJECT_ID --name="SRE Pretest"
+
+# Set the active project
+gcloud config set project GCP_PROJECT_ID
+
+# Enable required GCP APIs (GKE, Compute Engine, Container Registry)
+gcloud services enable container.googleapis.com
+gcloud services enable compute.googleapis.com
+gcloud services enable containerregistry.googleapis.com
+```
+
+#### Step 2: Create a Service Account (for Terraform and CI/CD)
+
+```bash
+# Create a Service Account
+gcloud iam service-accounts create sre-deployer \
+  --display-name="SRE Deployer"
+
+# Grant necessary permissions (Kubernetes Admin, Compute Admin, Service Account User)
+gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
+  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/container.admin"
+
+gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
+  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/compute.admin"
+
+gcloud projects add-iam-policy-binding GCP_PROJECT_ID \
+  --member="serviceAccount:sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
+
+# Download the Service Account JSON key
+gcloud iam service-accounts keys create gcp-sa-key.json \
+  --iam-account=sre-deployer@GCP_PROJECT_ID.iam.gserviceaccount.com
+```
+
+#### Step 3: Set Up Docker Hub
+
+1. Get **username** and **Access Token** from  [Docker Hub](https://hub.docker.com/).
+
+#### Step 4: Configure GitHub Secrets
+
+Add the following secrets in GitHub repository:
+
+| Secret Name | Value
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub username
+| `DOCKERHUB_TOKEN` | Docker Hub Access Token 
+| `GCP_SA_KEY` | Full contents of `gcp-sa-key.json`
+| `GCP_PROJECT_ID` | GCP Project ID
+
+---
+
+## Deployment Walkthrough
+
+Below are the step-by-step commands to manually deploy the entire service:
+
+### Step 1: Test Docker Image Locally (Q2)
+
+```bash
+# Build the image
+docker build -t custom-nginx:latest ./app/
+
+# Run the container locally
+docker run -d --name sre-test -p 8080:80 custom-nginx:latest
+
+# Verify (should display "Hello SRE!")
+curl http://localhost:8080/sre.txt
+
+# Clean up after testing
+docker stop sre-test && docker rm sre-test
+```
+
+### Step 2: Push Image to Docker Hub (Q2)
+
+```bash
+# Log in to Docker Hub
+docker login -u DOCKERHUB_USERNAME
+
+# Tag and push
+docker tag custom-nginx:latest DOCKERHUB_USERNAME/custom-nginx:latest
+docker push DOCKERHUB_USERNAME/custom-nginx:latest
+```
+
+### Step 3: Create GKE Cluster with Terraform (Q1)
+
+```bash
+# Set up GCP credentials for Terraform
+gcloud auth application-default login
+
+# Initialize Terraform
+cd terraform/
+terraform init
+
+# Preview resources (verify the plan)
+terraform plan -var="project_id=GCP_PROJECT_ID"
+
+# Create the cluster (takes approximately 5-10 minutes)
+terraform apply -var="project_id=GCP_PROJECT_ID"
+
+# Obtain cluster credentials so kubectl can access the cluster
+gcloud container clusters get-credentials sre-gke-cluster \
+  --zone asia-east1-a \
+  --project GCP_PROJECT_ID
+
+# Verify cluster connection
+kubectl cluster-info
+kubectl get nodes
+
+cd ..
+```
+
+### Step 4: Deploy Application to GKE with Helm (Q3)
+
+```bash
+# Deploy the Helm Chart (replace with Docker Hub username)
+helm install sre-app ./helm/sre-app \
+  --set image.repository=DOCKERHUB_USERNAME/custom-nginx \
+  --set image.tag=latest
+
+# Wait for Pods to become ready
+kubectl get pods -w
+
+# Watch the Service until EXTERNAL-IP changes from <pending> to an actual IP
+kubectl get svc sre-app-service -w
+
+# Test external IP with a browser or curl
+curl http://EXTERNAL_IP/sre.txt
+```
+
+### Step 5: Set Up CI/CD Automation (Q4)
+
+```bash
+# Initialize Git repository
+git init
+git add .
+git commit -m "Initial SRE pretest submission"
+
+# Create a GitHub repository and push
+git remote add origin git@github.com:USERNAME/gamania-sre-task.git
+git branch -M main
+git push -u origin main
+
+```
+
+### Resource Cleanup if needed
+
+```bash
+# Delete the Helm Release
+helm uninstall sre-app
+
+# Destroy the GKE cluster and all Terraform-managed resources
+cd terraform/
+terraform destroy -var="project_id=GCP_PROJECT_ID"
+```
+
+---
+
+
+### Thank You!
+Thank you for taking the time to read through this documentation. If you have any questions, feedback, or would like to discuss any architectural choices further, please feel free to reach out!
+
