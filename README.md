@@ -96,9 +96,9 @@ In strict accordance with the assignment guidelines, here is the disclosure of h
 
 | File | Description |
 |------|-------------|
-| `terraform/main.tf` | VPC, Subnet, GKE Cluster, and Node Pool definitions |
-| `terraform/variables.tf` | Centralized variable definitions (project ID, region, zone, node count, machine type) |
-| `terraform/outputs.tf` | Output values (cluster name, zone, endpoint, credentials command) |
+| [`terraform/main.tf`](https://github.com/ChennXIao/gamania-sre-task/blob/main/terraform/main.tf) | VPC, Subnet, GKE Cluster, and Node Pool definitions |
+| [`terraform/variables.tf`](https://github.com/ChennXIao/gamania-sre-task/blob/main/terraform/variables.tf) | Centralized variable definitions (project ID, region, zone, node count, machine type) |
+| [`terraform/outputs.tf`](https://github.com/ChennXIao/gamania-sre-task/blob/main/terraform/outputs.tf) | Output values (cluster name, zone, endpoint, credentials command) |
 
 **Task Breakdown:**
 
@@ -139,8 +139,8 @@ gcloud container clusters get-credentials sre-gke-cluster --zone asia-east1-a --
 
 | File | Description |
 |------|-------------|
-| `app/Dockerfile` | Nginx containerization using `nginx:alpine` as the base image |
-| `app/sre.txt` | Contains the text "Hello SRE!" |
+| [`app/Dockerfile`](https://github.com/ChennXIao/gamania-sre-task/blob/main/app/Dockerfile) | Nginx containerization using `nginx:alpine` as the base image |
+| [`app/sre.txt`](https://github.com/ChennXIao/gamania-sre-task/blob/main/app/sre.txt) | Contains the text "Hello SRE!" |
 
 **Task Breakdown:**
 
@@ -178,10 +178,10 @@ docker push -dockerhub-username/custom-nginx:latest
 
 | File | Description |
 |------|-------------|
-| `helm/sre-app/Chart.yaml` | Helm Chart metadata (name, version, appVersion) |
-| `helm/sre-app/values.yaml` | Configurable parameters (image, replicas, service type, resources, health check) |
-| `helm/sre-app/templates/deployment.yaml` | K8s Deployment with readiness/liveness probes and resource limits |
-| `helm/sre-app/templates/service.yaml` | K8s Service of type LoadBalancer for external access |
+| [`helm/sre-app/Chart.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/Chart.yaml) | Helm Chart metadata (name, version, appVersion) |
+| [`helm/sre-app/values.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/values.yaml) | Configurable parameters (image, replicas, service type, resources, health check) |
+| [`helm/sre-app/templates/deployment.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/templates/deployment.yaml) | K8s Deployment with readiness/liveness probes and resource limits |
+| [`helm/sre-app/templates/service.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/templates/service.yaml) | K8s Service of type LoadBalancer for external access |
 
 **Task Breakdown:**
 
@@ -260,7 +260,7 @@ sequenceDiagram
 
 | File | Description |
 |------|-------------|
-| `.github/workflows/deploy.yml` | CI/CD pipeline with build, push, and Helm deploy stages |
+| [`.github/workflows/deploy.yml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/.github/workflows/deploy.yml) | CI/CD pipeline with build, push, and Helm deploy stages |
 
 **Task Breakdown:**
 
@@ -289,8 +289,8 @@ git push origin main
 
 | File | Description |
 |------|-------------|
-| `.github/workflows/deploy.yml` | Pipeline that can be extended with branch-based environment selection |
-| `helm/sre-app/values.yaml` | Base values file; environment-specific overrides can be layered on top |
+| [`.github/workflows/deploy.yml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/.github/workflows/deploy.yml) | Pipeline that can be extended with branch-based environment selection |
+| [`helm/sre-app/values.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/values.yaml) | Base values file; environment-specific overrides can be layered on top |
 
 **Explanation:**
 
@@ -388,9 +388,9 @@ Install ArgoCD in the cluster and create an Application CRD for each environment
 
 | File | Description |
 |------|-------------|
-| `terraform/outputs.tf` | Terraform outputs that expose resource names (e.g., cluster name, zone, endpoint) |
-| `.github/workflows/deploy.yml` | CI/CD pipeline where Terraform outputs can be read and passed to Helm via `--set` |
-| `helm/sre-app/templates/deployment.yaml` | Helm template where annotations referencing Terraform resources can be added |
+| [`terraform/outputs.tf`](https://github.com/ChennXIao/gamania-sre-task/blob/main/terraform/outputs.tf) | Terraform outputs that expose resource names (e.g., cluster name, zone, endpoint) |
+| [`.github/workflows/deploy.yml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/.github/workflows/deploy.yml) | CI/CD pipeline where Terraform outputs can be read and passed to Helm via `--set` |
+| [`helm/sre-app/templates/deployment.yaml`](https://github.com/ChennXIao/gamania-sre-task/blob/main/helm/sre-app/templates/deployment.yaml) | Helm template where annotations referencing Terraform resources can be added |
 
 **Explanation:**
 
